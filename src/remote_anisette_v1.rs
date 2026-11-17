@@ -10,9 +10,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use async_trait::async_trait;
 use log::debug;
-use reqwest::Client;
 
 use crate::AnisetteError;
 use crate::anisette_headers_provider::AnisetteHeadersProvider;
@@ -115,21 +113,24 @@ impl RemoteAnisetteProviderV1 {
 
     /// Probes whether `url` answers with v1 anisette JSON, so callers can tell a
     /// v1 server apart from a v3 one.
+    #[cfg_attr(not(feature = "async"), remove_async_await::remove_async_await)]
     pub async fn probe(url: &str, configuration_path: PathBuf) -> bool {
         let mut p = RemoteAnisetteProviderV1::new(url.to_string(), configuration_path);
         p.get_anisette_headers(false).await.is_ok()
     }
 }
 
-#[async_trait]
+#[cfg_attr(feature = "async", async_trait::async_trait)]
 impl AnisetteHeadersProvider for RemoteAnisetteProviderV1 {
+    #[cfg_attr(not(feature = "async"), remove_async_await::remove_async_await)]
     async fn get_anisette_headers(
         &mut self,
         _skip_provisioning: bool,
     ) -> Result<HashMap<String, String>, AnisetteError> {
         let url = self.request_url()?;
         debug!("Fetching v1 anisette from {url}");
-        let headers = Client::new()
+        #[cfg(feature = "async")]
+        let headers = reqwest::Client::new()
             .get(&url)
             .header("Accept", "application/json")
             .send()
@@ -137,6 +138,13 @@ impl AnisetteHeadersProvider for RemoteAnisetteProviderV1 {
             .error_for_status()?
             .json::<HashMap<String, String>>()
             .await?;
+        #[cfg(not(feature = "async"))]
+        let headers = reqwest::blocking::Client::new()
+            .get(&url)
+            .header("Accept", "application/json")
+            .send()?
+            .error_for_status()?
+            .json::<HashMap<String, String>>()?;
 
         // A real anisette response always carries the one-time password / machine id.
         if !headers.contains_key("X-Apple-I-MD") && !headers.contains_key("X-Apple-I-MD-M") {
