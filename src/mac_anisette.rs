@@ -11,8 +11,10 @@ use std::{
 };
 
 pub const MAC_IDENTITY_DIR: &str = "mac-anisette";
-pub const CLIENT_INFO: &str =
-    "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>";
+/// Formerly the client info for every identity; Apple now rejects it (HTTP 503).
+/// Identities get theirs from [`crate::client_info::for_identity`].
+#[deprecated(note = "Apple's GSA rejects this value; use client_info::for_identity")]
+pub const CLIENT_INFO: &str = crate::client_info::BLOCKED[0];
 pub const USER_AGENT: &str = "akd/1.0 CFNetwork/1404.0.5 Darwin/22.3.0";
 
 pub fn identity_path(root: &Path, fake: bool) -> PathBuf {
@@ -59,7 +61,10 @@ impl Identity {
                 STANDARD.encode(self.local_user_id.as_bytes()),
             ),
             ("X-Apple-I-SRL-NO".into(), self.serial.clone()),
-            ("X-Mme-Client-Info".into(), CLIENT_INFO.into()),
+            (
+                "X-Mme-Client-Info".into(),
+                crate::client_info::for_identity(&self.device_id).into(),
+            ),
             ("User-Agent".into(), USER_AGENT.into()),
             (
                 "X-Apple-I-Client-Time".into(),
@@ -382,7 +387,7 @@ mod tests {
         assert_eq!(identity.device_id, reloaded.device_id);
         assert_ne!(identity.host_uuid, other.host_uuid);
         let headers = identity.headers();
-        assert_eq!(headers["X-Mme-Client-Info"], CLIENT_INFO);
+        assert!(!crate::client_info::is_blocked(&headers["X-Mme-Client-Info"]));
         assert_eq!(headers["X-Apple-I-SRL-NO"].len(), 12);
         assert!(headers["X-Mme-Device-Id"].starts_with("00006000-"));
         assert_eq!(headers["X-Mme-Device-Id"].len(), 25);

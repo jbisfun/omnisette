@@ -13,6 +13,7 @@ use thiserror::Error;
 pub mod adi_libraries;
 pub mod adi_proxy;
 pub mod anisette_headers_provider;
+pub mod client_info;
 pub mod mac_anisette;
 pub mod mac_libraries;
 pub mod remote_anisette_v1;
@@ -274,6 +275,18 @@ impl AutoRemoteProvider {
 impl AnisetteHeadersProvider for AutoRemoteProvider {
     #[cfg_attr(not(feature = "async"), remove_async_await::remove_async_await)]
     async fn get_anisette_headers(
+        &mut self,
+        skip_provisioning: bool,
+    ) -> Result<std::collections::HashMap<String, String>, AnisetteError> {
+        let mut headers = self.get_unsanitized(skip_provisioning).await?;
+        client_info::sanitize(&mut headers);
+        Ok(headers)
+    }
+}
+
+impl AutoRemoteProvider {
+    #[cfg_attr(not(feature = "async"), remove_async_await::remove_async_await)]
+    async fn get_unsanitized(
         &mut self,
         skip_provisioning: bool,
     ) -> Result<std::collections::HashMap<String, String>, AnisetteError> {
