@@ -78,6 +78,15 @@ fn save_json(path: &Path, value: &impl Serialize) -> Result<(), AnisetteError> {
     Ok(())
 }
 
+#[cfg(not(target_os = "ios"))]
+pub use emulator::MacAnisetteProvider;
+
+/// The CoreADI emulator (Unicorn). Not built for iOS, which can't map the
+/// executable memory it needs.
+#[cfg(not(target_os = "ios"))]
+mod emulator {
+use super::*;
+
 type EmulatorCall = Box<dyn FnOnce(&mut adi_core::CoreAdi) + Send>;
 
 /// Own the non-Send emulator on one dedicated thread inside this process.
@@ -267,7 +276,7 @@ impl MacAnisetteProvider {
     }
 }
 
-fn provision_response(bytes: &[u8]) -> Result<plist::Dictionary, AnisetteError> {
+pub(super) fn provision_response(bytes: &[u8]) -> Result<plist::Dictionary, AnisetteError> {
     let outer: plist::Dictionary = plist::from_bytes(bytes)?;
     let response = outer
         .get("Response")
@@ -287,7 +296,7 @@ fn provision_response(bytes: &[u8]) -> Result<plist::Dictionary, AnisetteError> 
     Ok(response.clone())
 }
 
-fn plist_data(response: &plist::Dictionary, key: &str) -> Result<Vec<u8>, AnisetteError> {
+pub(super) fn plist_data(response: &plist::Dictionary, key: &str) -> Result<Vec<u8>, AnisetteError> {
     let value = response
         .get(key)
         .ok_or_else(|| anyhow::anyhow!("Missing Apple provisioning field: {key}"))?;
@@ -353,8 +362,12 @@ impl AnisetteHeadersProvider for MacAnisetteProvider {
     }
 }
 
+}
+
 #[cfg(test)]
 mod tests {
+    #[cfg(not(target_os = "ios"))]
+    use super::emulator::{plist_data, provision_response};
     use super::*;
 
     #[test]
