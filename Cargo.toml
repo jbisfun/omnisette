@@ -18,6 +18,7 @@ remote-anisette-v3 = [
 aos-kit = []
 
 [dependencies]
+adi-core = { git = "https://github.com/sacca97/os-findmy-e", rev = "374d83854f657a7fdca45f813387d99d491db0e2" }
 
 libc = "0.2"
 async-trait = { version = "0.1", optional = true }
@@ -47,10 +48,10 @@ serde = {version = "1", features = ["derive"]}
 serde_json = "1"
 flate2 = "1.1"
 
-# The local providers emulate Apple's/Android's ADI code, which needs
-# executable memory an iOS app can't have; iOS builds are remote-only.
+# Android's ADI libraries are loaded as native ELF code, which iOS can't do.
+# (Mac CoreADI runs under Unicorn, which works on iOS with an interpreter-only
+# (TCI) Unicorn linked through pkg-config.)
 [target.'cfg(not(target_os = "ios"))'.dependencies]
-adi-core = { git = "https://github.com/sacca97/os-findmy-e", rev = "374d83854f657a7fdca45f813387d99d491db0e2" }
 android-loader = { git = "https://github.com/Dadoum/android-loader", branch = "bigger_pages" }
 
 [target.'cfg(target_os = "macos")'.dependencies]

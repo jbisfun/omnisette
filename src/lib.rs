@@ -221,21 +221,6 @@ impl AnisetteHeaders {
         }
     }
 
-    #[cfg(target_os = "ios")]
-    pub fn get_ssc_anisette_headers_provider(
-        _configuration: AnisetteConfiguration,
-    ) -> Result<AnisetteHeadersProviderRes, AnisetteError> {
-        Err(AnisetteError::UnsupportedDevice)
-    }
-
-    #[cfg(target_os = "ios")]
-    pub fn get_fake_anisette_headers_provider(
-        _configuration: AnisetteConfiguration,
-    ) -> Result<AnisetteHeadersProviderRes, AnisetteError> {
-        Err(AnisetteError::UnsupportedDevice)
-    }
-
-    #[cfg(not(target_os = "ios"))]
     pub fn get_ssc_anisette_headers_provider(
         configuration: AnisetteConfiguration,
     ) -> Result<AnisetteHeadersProviderRes, AnisetteError> {
@@ -247,7 +232,6 @@ impl AnisetteHeaders {
 
     /// Same ADI libraries as [`AnisetteProvider::Local`], but provisioned in a separate
     /// directory under a randomly generated Mac identity (device id + serial number).
-    #[cfg(not(target_os = "ios"))]
     pub fn get_fake_anisette_headers_provider(
         configuration: AnisetteConfiguration,
     ) -> Result<AnisetteHeadersProviderRes, AnisetteError> {
