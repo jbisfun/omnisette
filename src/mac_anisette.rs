@@ -15,7 +15,7 @@ pub const MAC_IDENTITY_DIR: &str = "mac-anisette";
 /// Identities get theirs from [`crate::client_info::for_identity`].
 #[deprecated(note = "Apple's GSA rejects this value; use client_info::for_identity")]
 pub const CLIENT_INFO: &str = crate::client_info::BLOCKED[0];
-pub const USER_AGENT: &str = "akd/1.0 CFNetwork/1404.0.5 Darwin/22.3.0";
+pub const USER_AGENT: &str = crate::client_info::USER_AGENT;
 
 pub fn identity_path(root: &Path, fake: bool) -> PathBuf {
     if fake {

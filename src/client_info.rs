@@ -6,8 +6,7 @@
 //! descriptions are accepted. Each identity therefore gets one stable,
 //! real model/OS combination picked from [`CANDIDATES`] by its device id, and
 //! known-blocked values coming back from remote servers are replaced the same
-//! way. Every candidate was checked to reach GSA's authentication stage
-//! (HTTP 401 for an empty init rather than 503).
+//! way.
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
@@ -18,16 +17,14 @@ pub const BLOCKED: &[&str] = &[
     "<MacBookPro15,1> <Mac OS X;10.15.2;19C57> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>",
 ];
 
-pub const CANDIDATES: &[&str] = &[
-    "<MacBookPro13,3> <Mac OS X;10.12.6;16G29> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<MacBookPro14,1> <Mac OS X;10.13.6;17G14042> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<MacBookPro15,2> <Mac OS X;10.14.6;18G9323> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<MacBookAir8,1> <Mac OS X;10.14.6;18G103> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<iMac19,1> <Mac OS X;10.15.7;19H2026> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<Macmini8,1> <Mac OS X;10.15.7;19H15> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<MacBookPro16,1> <Mac OS X;10.15.7;19H15> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-    "<iMac20,1> <Mac OS X;10.15.7;19H2> <com.apple.AuthKit/1 (com.apple.akd/1.0)>",
-];
+/// A current Mac, exactly what SideStore's on-device anisette sends. Apple
+/// only offers normal (trusted-device) 2FA to current macOS; old versions
+/// get SMS-only `secondaryAuth` and then "Update this Mac to sign in".
+/// (GSA's edge 503s any `<macOS;...>` token, so the version goes in the `Mac OS X` form.)
+pub const CANDIDATES: &[&str] = &["<MacBookPro18,3> <Mac OS X;26.6;25F84> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"];
+
+/// User-Agent matching [`CANDIDATES`].
+pub const USER_AGENT: &str = "AuthKit/1 (Macintosh; OS X 26.6) (com.apple.akd/1.0)";
 
 /// Stable client info for an identity (seed: its device id).
 pub fn for_identity(seed: &str) -> &'static str {
